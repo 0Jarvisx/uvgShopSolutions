@@ -12,7 +12,7 @@ const generateInvoice = async (orderData) => {
   const invoiceData = {
     orderId: orderData.orderId,
     customerEmail: orderData.customerEmail,
-    items: orderData.items,
+    items: orderData.products,
     total: orderData.total,
     createdAt: new Date().toISOString(),
   };
@@ -29,7 +29,7 @@ const generateInvoice = async (orderData) => {
 // Función para enviar la factura por correo electrónico
 const sendInvoiceEmail = async (customerEmail, filePath) => {
   const params = {
-    Source: 'noreply@tu-dominio.com', // Reemplazar con tu email verificado en SES
+    Source: process.env.SES_SOURCE_EMAIL, // Reemplazar con tu email verificado en SES
     Destination: {
       ToAddresses: [customerEmail],
     },
