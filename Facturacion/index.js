@@ -12,7 +12,7 @@ const generateInvoice = async (orderData) => {
   const invoiceData = {
     orderId: orderData.orderId,
     customerEmail: orderData.customerEmail,
-    items: orderData.items,
+    items: orderData.products,
     total: orderData.total,
     createdAt: new Date().toISOString(),
   };
