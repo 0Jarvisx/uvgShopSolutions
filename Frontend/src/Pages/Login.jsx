@@ -12,6 +12,8 @@ import {
 } from "react-icons/fa";
 import { AuthContext } from "../Context/AuthContext";
 import { useNavigate } from "react-router-dom";
+import useApiRequest from "../Hooks/ApiRequest";
+
 
 const Button = ({ children, className, ...props }) => (
   <button
@@ -37,11 +39,18 @@ export default function LoginForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
+  const [phoneNumber, setPhoneNumber] = useState("");
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
-  const { login } = useContext(AuthContext);
+  const { login, user } = useContext(AuthContext);
   const navigate = useNavigate();
 
+  const { data, loading, error, sendRequest } = useApiRequest();
+
   useEffect(() => {
+    if(user?.id) {
+      navigate(user.role !== 'admin' ? '/' : '/Dashboard')
+      return;
+    }
     const handleMouseMove = (e) => {
       setMousePosition({ x: e.clientX, y: e.clientY });
     };
@@ -49,36 +58,31 @@ export default function LoginForm() {
     return () => window.removeEventListener("mousemove", handleMouseMove);
   }, []);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    let url = "";
-    let body = "";
-    if (isLogin) {
-      url = "http://localhost:3000/auth/" + email;
-      body = {
-        password,
-      };
-    } else {
-      url = "http://localhost:3000/register";
-      body = {
-        password,
-        email,
-        role: 'client',
-        name,
-      };
-    }
+    const url = isLogin
+      ? `http://localhost:3000/api/users/login`
+      : 'http://localhost:3000/api/users/';
 
-    //const response = fetch(url, body);
-
-    const userData = {
-      token: "12312312323",
-      email: "Prueba@gmail.com",
-      name: "Javier",
-      role: "admin",
+    const body = {
+      email,
+      password,
+      ...(isLogin ? {} : { name, phoneNumber, rol: 'client' }),
     };
 
-    login(userData);
-    navigate(userData.role !== "admin" ? "/" : "/Dashboard");
+    try {
+      const responseData = await sendRequest(url, {
+        method: 'POST',
+        body: JSON.stringify(body),
+      });
+
+      if (responseData) {
+        login(responseData);
+        navigate(responseData.role !== 'admin' ? '/' : '/Dashboard');
+      }
+    } catch (err) {
+      console.error('Error:', err.message);
+    }
   };
 
   return (
@@ -111,24 +115,44 @@ export default function LoginForm() {
               <form onSubmit={handleSubmit} className="space-y-6">
                 <AnimatePresence>
                   {!isLogin && (
-                    <motion.div
-                      initial={{ opacity: 0, height: 0 }}
-                      animate={{ opacity: 1, height: "auto" }}
-                      exit={{ opacity: 0, height: 0 }}
-                      transition={{ duration: 0.3 }}
-                    >
-                      <label className="text-gray-600 text-sm font-medium mb-1 block">
-                        Nombre
-                      </label>
-                      <Input
-                        icon={FaUser}
-                        type="text"
-                        value={name}
-                        onChange={(e) => setName(e.target.value)}
-                        required
-                        placeholder="John Doe"
-                      />
-                    </motion.div>
+                    <>
+                      <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: "auto" }}
+                        exit={{ opacity: 0, height: 0 }}
+                        transition={{ duration: 0.3 }}
+                      >
+                        <label className="text-gray-600 text-sm font-medium mb-1 block">
+                          Nombre
+                        </label>
+                        <Input
+                          icon={FaUser}
+                          type="text"
+                          value={name}
+                          onChange={(e) => setName(e.target.value)}
+                          required
+                          placeholder="John Doe"
+                        />
+                      </motion.div>
+                      <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: "auto" }}
+                        exit={{ opacity: 0, height: 0 }}
+                        transition={{ duration: 0.3 }}
+                      >
+                        <label className="text-gray-600 text-sm font-medium mb-1 block">
+                          Numero de Telefono
+                        </label>
+                        <Input
+                          icon={FaUser}
+                          type="phoneNumber"
+                          value={phoneNumber}
+                          onChange={(e) => setPhoneNumber(e.target.value)}
+                          required
+                          placeholder="XXXX-XXXX"
+                        />
+                      </motion.div>
+                    </>
                   )}
                 </AnimatePresence>
                 <div>

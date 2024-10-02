@@ -1,81 +1,113 @@
-import { useState } from "react";
+import { useContext, useState } from "react";
+import useApiRequest from "../../Hooks/ApiRequest";
+import { AuthContext } from "../../Context/AuthContext";
 
-export default function AdminUsuario() {
-  const [users, setUsers] = useState([
-    { id: 1, name: "John Doe", email: "john@example.com" },
-    { id: 2, name: "Jane Smith", email: "jane@example.com" },
-  ]);
+export default function AdminUsuario({ users, setUsers }) {
+  const { user } = useContext(AuthContext);
   const [newUser, setNewUser] = useState({
     name: "",
     email: "",
     password: "",
+    rol: "",
+    phoneNumber: "",
   });
 
-  const addUser = (e) => {
+  const { sendRequest } = useApiRequest();
+
+  const addUser = async (e) => {
     e.preventDefault();
     if (newUser.name && newUser.email && newUser.password) {
-      const productToAdd = {
-        id: users.length + 1,
-        ...newUser,
-      };
-      setUsers([...users, productToAdd]);
-      setNewUser({ name: "", email: "", password: "" });
+      let url = "http://localhost:3000/api/users/";
+
+      try {
+        const responseData = await sendRequest(url, {
+          method: "POST",
+          body: JSON.stringify(newUser),
+        });
+
+        if (responseData) {
+          setUsers((prev) => [...prev, responseData]);
+          setNewUser({
+            name: "",
+            email: "",
+            password: "",
+            rol: "",
+            phoneNumber: "",
+          });
+        }
+      } catch (err) {
+        console.error("Error:", err.message);
+      }
     }
   };
 
   const handleInputChange = (e) => {
-    const { name, value, type } = e.target;
-    if (type === "file") {
-      const file = e.target.files?.[0];
-      if (file) {
-        const reader = new FileReader();
-        reader.onloadend = () => {
-          setNewUser((prev) => ({
-            ...prev,
-            image: reader.result,
-          }));
-        };
-        reader.readAsDataURL(file);
-      }
-    } else {
-      setNewUser((prev) => ({
-        ...prev,
-        [name]: name === "name" ? value : value,
-      }));
-    }
+    const { name, value } = e.target;
+    setNewUser((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
   };
 
-  const deleteUser = (id) => {
-    setUsers(users.filter((user) => user.id !== id));
+  const deleteUser = async (id) => {
+    let url = `http://localhost:3000/api/users/${id}`;
+    try {
+      await sendRequest(url, {
+        method: "DELETE",
+      });
+      setUsers(users.filter((user) => user.id !== id));
+    } catch (err) {
+      console.error("Error:", err.message);
+    }
   };
 
   return (
     <div className="p-6">
       <h2 className="text-xl font-bold mb-4">Usuarios</h2>
       <form onSubmit={addUser} className="mb-4">
+        {" "}
+        {/* Cambiado aquí */}
         <div className="flex gap-2 mb-2">
           <input
             type="text"
             name="name"
             value={newUser.name}
             onChange={handleInputChange}
-            placeholder="name"
+            placeholder="Nombre"
             className="border p-2 rounded"
             required
           />
           <input
             type="email"
             name="email"
-            value={newUser.price}
+            value={newUser.email}
             onChange={handleInputChange}
-            placeholder="email"
+            placeholder="Email"
+            className="border p-2 rounded"
+            required
+          />
+          <input
+            type="text"
+            name="rol"
+            value={newUser.rol}
+            onChange={handleInputChange}
+            placeholder="Rol"
+            className="border p-2 rounded"
+            required
+          />
+          <input
+            type="text"
+            name="phoneNumber"
+            value={newUser.phoneNumber}
+            onChange={handleInputChange}
+            placeholder="Telefono"
             className="border p-2 rounded"
             required
           />
           <input
             type="password"
             name="password"
-            value={newUser.stock}
+            value={newUser.password}
             onChange={handleInputChange}
             placeholder="******"
             className="border p-2 rounded"
@@ -99,14 +131,15 @@ export default function AdminUsuario() {
           </tr>
         </thead>
         <tbody>
-          {users.map((user) => (
-            <tr key={user.id}>
-              <td className="border border-gray-200 p-2">{user.id}</td>
-              <td className="border border-gray-200 p-2">{user.name}</td>
-              <td className="border border-gray-200 p-2">{user.email}</td>
+          {users.map((tuser) => (
+            <tr key={tuser.id}>
+              <td className="border border-gray-200 p-2">{tuser.id}</td>
+              <td className="border border-gray-200 p-2">{tuser.name}</td>
+              <td className="border border-gray-200 p-2">{tuser.email}</td>
               <td className="border border-gray-200 p-2">
                 <button
-                  onClick={() => deleteUser(user.id)}
+                disabled={user.id === tuser.id}
+                  onClick={() => deleteUser(tuser.id)}
                   className="bg-red-500 hover:bg-red-600 text-white font-bold py-1 px-2 rounded"
                 >
                   Eliminar

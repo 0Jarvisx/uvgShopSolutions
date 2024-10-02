@@ -1,26 +1,37 @@
-import { useState } from 'react';
+import { useState } from "react";
+import useApiRequest from "../../Hooks/ApiRequest";
 
-const orderStatuses = [
-  { id: 1, name: 'Pendiente' },
-  { id: 2, name: 'En camino' },
-  { id: 3, name: 'Entregado' }
-];
+export default function AdminOrder({ orders, setOrders, orderStatuses }) {
+  console.log(orders)
+  const { sendRequest } = useApiRequest();
 
-export default function AdminOrder() {
-  const [orders, setOrders] = useState([
-    { id: 1, customerName: 'John Doe', total: 29.99, status: orderStatuses[0] },
-    { id: 2, customerName: 'Jane Smith', total: 49.99, status: orderStatuses[1] },
-  ]);
-
-  const changeStatus = (orderId) => {
-    setOrders(orders.map(order => {
-      if (order.id === orderId) {
-        const currentStatusIndex = orderStatuses.findIndex(status => status.id === order.status.id);
-        const nextStatusIndex = (currentStatusIndex + 1) % orderStatuses.length;
-        return { ...order, status: orderStatuses[nextStatusIndex] };
-      }
-      return order;
-    }));
+  const changeStatus = async (orderId, statusId) => {
+    let url = "http://localhost:3000/api/orders/status";
+    statusId++;
+    const dataToSend = {
+      orderId,
+      statusId,
+    };
+    const responseData = await sendRequest(url, {
+      method: "PUT",
+      body: JSON.stringify(dataToSend),
+    });
+    if (responseData) {
+      setOrders(
+        orders.map((order) => {
+          {console.log(order)}
+          if (order.id === orderId) {
+            const currentStatusIndex = orderStatuses.findIndex(
+              (status) => status.id === order.status_id
+            );
+            const nextStatusIndex =
+              (currentStatusIndex + 1) % orderStatuses.length;
+            return { ...order, status_id: orderStatuses[nextStatusIndex].id };
+          }
+          return order;
+        })
+      );
+    }
   };
 
   return (
@@ -37,21 +48,28 @@ export default function AdminOrder() {
           </tr>
         </thead>
         <tbody>
-          {orders.map(order => (
+          {orders.map((order) => (
             <tr key={order.id}>
               <td className="border border-gray-200 p-2">{order.id}</td>
-              <td className="border border-gray-200 p-2">{order.customerName}</td>
-              <td className="border border-gray-200 p-2">Q {order.total.toFixed(2)}</td>
-              <td className="border border-gray-200 p-2">{order.status.name}</td>
               <td className="border border-gray-200 p-2">
-                <button 
-                  onClick={() => changeStatus(order.id)} 
+                {order.customerName}
+              </td>
+              <td className="border border-gray-200 p-2">
+                Q {order.total.toFixed(2)}
+              </td>
+
+              <td className="border border-gray-200 p-2">
+                {orderStatuses[order.status_id - 1].name}
+              </td>
+              <td className="border border-gray-200 p-2">
+                <button
+                  onClick={() => changeStatus(order.id, order.status_id, order.user_id)}
                   className={`font-bold py-1 px-2 rounded ${
-                    order.status.name === 'Entregado'
-                      ? 'bg-gray-400 cursor-not-allowed'
-                      : 'bg-blue-500 hover:bg-blue-600 text-white'
+                    order.status_id === 3
+                      ? "bg-gray-400 cursor-not-allowed"
+                      : "bg-blue-500 hover:bg-blue-600 text-white"
                   }`}
-                  disabled={order.status.name === 'Entregado'}
+                  disabled={order.status_id === 3}
                 >
                   Cambiar Estado
                 </button>

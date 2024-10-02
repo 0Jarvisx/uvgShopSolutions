@@ -1,8 +1,8 @@
 import { useFilters } from "../Hooks/useFilters";
 
-export default function Filters() {
+export default function Filters({ categories }) {
   const { filters, setFilters } = useFilters();
-
+  console.log(categories);
   const handlePriceChange = (e) => {
     setFilters((prevState) => ({
       ...prevState,
@@ -59,10 +59,11 @@ export default function Filters() {
             onChange={handleCategoryChange}
           >
             <option value="all">Todas</option>
-            <option value="celulares">Celulares</option>
-            <option value="autos">Autos</option>
-            <option value="hogar">Hogar</option>
-            <option value="laptops">Laptops</option>
+            {categories.map((category, index) => (
+              <option key={index} value={category.id}>
+                {category.name}
+              </option>
+            ))}
           </select>
         </div>
       </div>

@@ -1,34 +1,66 @@
 import { useState, useRef } from "react";
+import useApiRequest from "../../Hooks/ApiRequest";
 
-export default function AdminProducto() {
-  const [products, setProducts] = useState([
-    { id: 1, name: "Product 1", image: "https://concepto.de/wp-content/uploads/2015/03/paisaje-e1549600034372.jpg", price: 9.99, stock: 5 },
-    { id: 2, name: "Product 2", image: "https://img.freepik.com/vector-gratis/paisaje-primavera-dibujado-mano_23-2148417650.jpg?w=740&t=st=1727409509~exp=1727410109~hmac=405380ef2ea33c9161f5b822a4840ff83dae8696f80017b951dc8a651a3162c1", price: 19.99, stock: 0 },
-  ]);
-
+export default function AdminProducto({ products, setProducts, categories }) {
   const [newProduct, setNewProduct] = useState({
     name: "",
     price: 0,
     stock: 0,
+    category: categories[0].id,
+    description: "",
+    image: "",
   });
+  const { sendRequest } = useApiRequest();
   const fileInputRef = useRef(null);
 
-  const addProduct = (e) => {
+  const addProduct = async (e) => {
     e.preventDefault();
+    console.log(newProduct);
     if (
       newProduct.name &&
       newProduct.price > 0 &&
       newProduct.stock >= 0 &&
-      newProduct.image
+      newProduct.image &&
+      newProduct.category
     ) {
-      const productToAdd = {
-        id: products.length + 1,
-        ...newProduct,
-      };
-      setProducts([...products, productToAdd]);
-      setNewProduct({ name: "", price: 0, stock: 0, image: "" });
-      if (fileInputRef.current) {
-        fileInputRef.current.value = "";
+      const url = "http://localhost:3000/api/products/";
+
+      try {
+        const formData = new FormData();
+
+        formData.append("file", fileInputRef.current.files[0]);
+        formData.append("category", newProduct.category);
+        const urlImage = 'http://localhost:3000/api/products/upload'
+        const responseDataImage =true /*  await sendRequest(urlImage, {
+          method: "POST",
+          body: formData,
+        });
+        let newUrl = ""; */
+        if (responseDataImage) {
+          //newUrl = responseDataImage.file.location;
+
+          const responseData = await sendRequest(url, {
+            method: "POST",
+            body: JSON.stringify({ ...newProduct, /* image: newUrl */ }),
+          });
+
+          if (responseData) {
+            setProducts((prev) => [...prev, responseData]);
+            setNewProduct({
+              name: "",
+              price: 0,
+              stock: 0,
+              image: "",
+              category: "",
+            });
+
+            if (fileInputRef.current) {
+              fileInputRef.current.value = "";
+            }
+          }
+        }
+      } catch (err) {
+        console.error("Error:", err.message);
       }
     }
   };
@@ -52,6 +84,7 @@ export default function AdminProducto() {
         reader.readAsDataURL(file);
       }
     } else {
+      console.log(value, name);
       setNewProduct((prev) => ({
         ...prev,
         [name]: name === "name" ? value : value,
@@ -70,6 +103,15 @@ export default function AdminProducto() {
             value={newProduct.name}
             onChange={handleInputChange}
             placeholder="Producto"
+            className="border p-2 rounded"
+            required
+          />
+          <input
+            type="text"
+            name="description"
+            value={newProduct.description}
+            onChange={handleInputChange}
+            placeholder="Descripcion"
             className="border p-2 rounded"
             required
           />
@@ -94,6 +136,19 @@ export default function AdminProducto() {
             min="0"
             required
           />
+          <select
+            id="category"
+            name="category"
+            value={newProduct.category}
+            className="block w-full mt-1 rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+            onChange={handleInputChange}
+          >
+            {categories.map((category, index) => (
+              <option key={index} value={category.id}>
+                {category.name}
+              </option>
+            ))}
+          </select>
           <input
             type="file"
             name="image"

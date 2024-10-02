@@ -1,5 +1,5 @@
 import { useState, useEffect, useContext } from "react";
-import { ShoppingCart, User, Search } from "lucide-react";
+import { ShoppingCart, User, Search, LayoutDashboard } from "lucide-react";
 import { Link } from "react-router-dom";
 import { AuthContext } from "../Context/AuthContext";
 import { CarritoContext } from "../Context/CarritoContext";
@@ -26,11 +26,11 @@ export default function Header() {
       window.removeEventListener("scroll", handleScroll);
     };
   }, []);
-  const handleLogOut =( ) => {
+  const handleLogOut = () => {
     //NOTIFICAR A NODE
 
-    logout()
-  }
+    logout();
+  };
 
   return (
     <header
@@ -112,17 +112,17 @@ export default function Header() {
             <Search className="h-6 w-6" />
           </Link>
           {user ? (
-             <Link
-             to="/"
-             onClick={handleLogOut}
-             className={`${
-               isScrolled
-                 ? "text-gray-300 hover:text-white"
-                 : "text-gray-600 hover:text-gray-900"
-             }`}
-           >
-             Cerrar Sesion
-           </Link>
+            <Link
+              to="/"
+              onClick={handleLogOut}
+              className={`${
+                isScrolled
+                  ? "text-gray-300 hover:text-white"
+                  : "text-gray-600 hover:text-gray-900"
+              }`}
+            >
+              Cerrar Sesion
+            </Link>
           ) : (
             <Link
               to="/login"
@@ -135,8 +135,9 @@ export default function Header() {
               <User className="h-6 w-6" />
             </Link>
           )}
+
           <Link
-            to="/Carrito"
+            to={user?.role == "admin" ? "/Dashboard" : "/Carrito"}
             className={`${
               isScrolled
                 ? "text-gray-300 hover:text-white"
@@ -148,7 +149,12 @@ export default function Header() {
                 {totalItems}
               </span>
             )}
-            <ShoppingCart className="h-6 w-6" />
+
+            {user?.role === "admin" ? (
+              <LayoutDashboard className=" h-6 w-6" />
+            ) : (
+              <ShoppingCart className="h-6 w-6" />
+            )}
           </Link>
         </div>
       </div>
