@@ -5,12 +5,13 @@ export default function AdminOrder({ orders, setOrders, orderStatuses }) {
   console.log(orders)
   const { sendRequest } = useApiRequest();
 
-  const changeStatus = async (orderId, statusId) => {
+  const changeStatus = async (orderId, statusId, user_id) => {
     let url = "http://localhost:3000/api/orders/status";
     statusId++;
     const dataToSend = {
       orderId,
       statusId,
+      userId: user_id
     };
     const responseData = await sendRequest(url, {
       method: "PUT",
@@ -30,9 +31,9 @@ export default function AdminOrder({ orders, setOrders, orderStatuses }) {
           }
           return order;
         })
-      );
-    }
-  };
+      );
+    }
+  };
 
   return (
     <div className="p-6">

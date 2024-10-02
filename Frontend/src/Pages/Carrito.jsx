@@ -37,6 +37,7 @@ export default function ShoppingCart() {
         userId: user.id,
         statusId: 1,
         total,
+        email: user.email
       };
     
       let url = "http://localhost:3000/api/orders/";

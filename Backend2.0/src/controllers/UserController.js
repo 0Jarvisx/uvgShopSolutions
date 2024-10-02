@@ -1,5 +1,8 @@
 const { hashPassword,comparePassword } = require("../jobs/encryptGenerator");
 const User = require("../models/User");
+const { SESClient, VerifyEmailIdentityCommand } = require('@aws-sdk/client-ses');
+require("dotenv").config()
+const sesClient = new SESClient({ region: process.env.AWS_REGION });
 // Crear usuario
 exports.createUser = async (req, res) => {
   console.log("----------hola", req.body);
@@ -7,6 +10,7 @@ exports.createUser = async (req, res) => {
   try {
     req.body.password = await hashPassword(req.body.password)
     const user = await User.create(req.body);
+    await verifyEmail(user.email);
     res.json(user);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -98,4 +102,18 @@ exports.loginUser = async (req, res) => {
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
+};
+
+//Verificacion del correo en SES
+const verifyEmail = async (email) => {
+  const params = {
+    EmailAddress: email,
+  };
+
+  try {
+    const data = await sesClient.send(new VerifyEmailIdentityCommand(params));
+    console.log('Correo de verificación enviado a ${email}', data);
+  } catch (error) {
+    console.error('Error verificando el correo:', error);
+  }
 };

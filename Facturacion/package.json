@@ -8,5 +8,12 @@
   },
   "keywords": [],
   "author": "",
-  "license": "ISC"
+  "license": "ISC",
+  "dependencies": {
+    "@aws-sdk/client-ses": "^3.662.0",
+    "@aws-sdk/client-sqs": "^3.662.0",
+    "aws-sdk": "^2.1691.0",
+    "dotenv": "^16.4.5",
+    "fs": "^0.0.1-security"
+  }
 }

@@ -1,7 +1,7 @@
 const { SESClient, SendEmailCommand } = require("@aws-sdk/client-ses");
 const { SQSClient, SendMessageCommand } = require("@aws-sdk/client-sqs");
-const { Order, Product, User } = require("../models"); // Modelos
-
+const User = require("../models/User");
+const Order = require("../models/Order");
 // Inicializa el cliente de SES y SQS
 const ses = new SESClient({ region: process.env.AWS_REGION });
 const sqs = new SQSClient({ region: process.env.AWS_REGION });
@@ -11,6 +11,7 @@ exports.createOrder = async (req, res) => {
 
   try {
     // 1. Crear la orden en la base de datos
+    console.log(Order)
     const order = await Order.create({
       user_id: userId,
       status_id: statusId,
@@ -34,7 +35,6 @@ exports.createOrder = async (req, res) => {
       userId: userId,
       email: email,
       statusId: statusId,
-      products: products,
       total: total,
     };
 
@@ -55,6 +55,7 @@ exports.createOrder = async (req, res) => {
     // 5. Responder con la orden creada
     res.json(order);
   } catch (error) {
+    console.log(error);
     res.status(500).json({ error: error.message });
   }
 };
@@ -74,9 +75,11 @@ exports.updateOrderStatus = async (req, res) => {
 
     // Buscar al usuario por ID
     const user = await User.findByPk(userId);
+    console.log(user);
     if (!user) {
       return res.status(404).json({ message: "Usuario no encontrado" });
     }
+    console.log(user.email);
 
     // Configurar los parámetros del correo
     const emailParams = {
@@ -85,20 +88,25 @@ exports.updateOrderStatus = async (req, res) => {
       },
       Message: {
         Body: {
-          Text: { Data: `El estado de tu orden ha cambiado a ${statusId}.` },
+          Text: { Data: `El estado de tu orden ${orderId} ha cambiado a ${statusId}.` },
         },
         Subject: { Data: "Actualización del estado de tu orden" },
       },
       Source: process.env.SES_SOURCE_EMAIL, // Correo electrónico verificado en SES
     };
-
+    console.log(emailParams);
     // Enviar correo a través de SES
-    const command = new SendEmailCommand(emailParams);
-    await ses.send(command);
+    try {
+      const data = await ses.send(new SendEmailCommand(emailParams));
+      console.log('Correo enviado con cambio de estado:', data.MessageId);
+    } catch (error) {
+      console.error('Error enviando correo:', error);
+    }
 
     // Enviar la orden actualizada como respuesta
     res.json(order);
   } catch (error) {
+    console.error(error);
     res.status(500).json({ error: error.message });
   }
 };

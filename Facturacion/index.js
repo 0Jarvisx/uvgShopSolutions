@@ -29,10 +29,10 @@ const generateInvoice = async (orderData) => {
 // Función para enviar la factura por correo electrónico
 const sendInvoiceEmail = async (customerEmail, filePath) => {
   const params = {
-    Source: 'noreply@tu-dominio.com', // Reemplazar con tu email verificado en SES
+    Source: process.env.SES_SOURCE_EMAIL, // Reemplazar con tu email verificado en SES
     Destination: {
       ToAddresses: [customerEmail],
-    },
+    },
     Message: {
       Subject: {
         Data: 'Tu Factura',
@@ -66,7 +66,7 @@ const processInvoice = async (messageBody) => {
   const invoiceFilePath = await generateInvoice(orderData);
 
   // 2. Enviar la factura por correo
-  await sendInvoiceEmail(orderData.customerEmail, invoiceFilePath);
+  await sendInvoiceEmail(orderData.email, invoiceFilePath);
 
   // 3. Eliminar el archivo local
   fs.unlinkSync(invoiceFilePath);
